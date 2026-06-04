@@ -94,6 +94,19 @@ NumCompute-Stream/
 │   └── optim.py
 │
 ├── tests/
+│   ├── test_io.py
+│   ├── test_preprocessing.py
+│   ├── test_stats.py
+│   ├── test_metrics.py
+│   ├── test_pipeline.py
+│   ├── test_tree.py
+│   ├── test_ensemble.py
+│   ├── test_stream.py
+│   ├── test_visualise.py
+│   ├── test_utils.py
+│   ├── test_rank.py
+│   ├── test_sort_search.py
+│   └── test_optim.py
 │
 ├── benchmark/
 │   └── benchmark_streaming_models.py
