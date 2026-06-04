@@ -73,3 +73,115 @@ def test_pipeline_empty_steps():
     X_out = pipe.fit_transform(X)
 
     assert np.array_equal(X_out, X)
+
+class DummyStreamingModel:
+    def __init__(self):
+        self.was_partial_fit_called = False
+        self.X_shape_ = None
+        self.y_shape_ = None
+
+    def partial_fit(self, X, y=None):
+        self.was_partial_fit_called = True
+        self.X_shape_ = X.shape
+        if y is not None:
+            self.y_shape_ = y.shape
+        return self
+
+    def predict(self, X):
+        return np.zeros(X.shape[0], dtype=int)
+
+
+def test_pipeline_partial_fit_with_transformer_and_model():
+    pipe = Pipeline([
+        ("scale", StandardScaler()),
+        ("model", DummyStreamingModel())
+    ])
+
+    X = np.array([
+        [1.0, 2.0],
+        [3.0, 4.0],
+        [5.0, 6.0],
+    ])
+    y = np.array([0, 1, 0])
+
+    pipe.partial_fit(X, y)
+
+    model = pipe.steps[-1][1]
+
+    assert model.was_partial_fit_called is True
+    assert model.X_shape_ == X.shape
+    assert model.y_shape_ == y.shape
+
+
+def test_pipeline_predict_after_partial_fit():
+    pipe = Pipeline([
+        ("scale", StandardScaler()),
+        ("model", DummyStreamingModel())
+    ])
+
+    X = np.array([
+        [1.0, 2.0],
+        [3.0, 4.0],
+    ])
+    y = np.array([0, 1])
+
+    pipe.partial_fit(X, y)
+    preds = pipe.predict(X)
+
+    assert preds.shape == (2,)
+
+
+def test_pipeline_requires_partial_fit_for_transformer():
+    class BadTransformer:
+        def transform(self, X):
+            return X
+
+    pipe = Pipeline([
+        ("bad", BadTransformer()),
+        ("model", DummyStreamingModel())
+    ])
+
+    X = np.array([[1.0, 2.0]])
+    y = np.array([0])
+
+    with pytest.raises(AttributeError):
+        pipe.partial_fit(X, y)
+
+
+def test_pipeline_requires_partial_fit_for_final_model():
+    class BadModel:
+        def predict(self, X):
+            return np.zeros(X.shape[0], dtype=int)
+
+    pipe = Pipeline([
+        ("scale", StandardScaler()),
+        ("model", BadModel())
+    ])
+
+    X = np.array([[1.0, 2.0]])
+    y = np.array([0])
+
+    with pytest.raises(AttributeError):
+        pipe.partial_fit(X, y)
+
+
+def test_pipeline_requires_predict_for_final_model():
+    class NoPredictModel:
+        def partial_fit(self, X, y=None):
+            return self
+
+    pipe = Pipeline([
+        ("scale", StandardScaler()),
+        ("model", NoPredictModel())
+    ])
+
+    X = np.array([
+        [1.0, 2.0],
+        [3.0, 4.0],
+    ])
+    y = np.array([0, 1])
+
+    pipe.partial_fit(X, y)
+
+    with pytest.raises(AttributeError):
+        pipe.predict(X)
