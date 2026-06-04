@@ -62,3 +62,64 @@ def confusion_matrix(y_true, y_pred):
 def mse(y_true, y_pred):
     y_true, y_pred = _check_shape(y_true, y_pred)
     return np.mean((y_true - y_pred) ** 2)
+
+
+class StreamingClassificationMetrics:
+    def __init__(self):
+        self.reset()
+
+    def update(self, y_true, y_pred):
+        y_true, y_pred = _check_shape(y_true, y_pred)
+
+        self.tp += int(np.sum((y_true == 1) & (y_pred == 1)))
+        self.fp += int(np.sum((y_true == 0) & (y_pred == 1)))
+        self.fn += int(np.sum((y_true == 1) & (y_pred == 0)))
+        self.tn += int(np.sum((y_true == 0) & (y_pred == 0)))
+
+    def reset(self):
+        self.tp = 0
+        self.fp = 0
+        self.fn = 0
+        self.tn = 0
+
+    def accuracy(self):
+        total = self.tp + self.fp + self.fn + self.tn
+        if total == 0:
+            return 0.0
+        return (self.tp + self.tn) / total
+
+    def precision(self):
+        denom = self.tp + self.fp
+        if denom == 0:
+            return 0.0
+        return self.tp / denom
+
+    def recall(self):
+        denom = self.tp + self.fn
+        if denom == 0:
+            return 0.0
+        return self.tp / denom
+
+    def f1(self):
+        p = self.precision()
+        r = self.recall()
+
+        if p + r == 0:
+            return 0.0
+
+        return 2 * p * r / (p + r)
+
+    def confusion_matrix(self):
+        return np.array([
+            [self.tn, self.fp],
+            [self.fn, self.tp]
+        ])
+
+    def result(self):
+        return {
+            "accuracy": self.accuracy(),
+            "precision": self.precision(),
+            "recall": self.recall(),
+            "f1": self.f1(),
+            "confusion_matrix": self.confusion_matrix()
+        }

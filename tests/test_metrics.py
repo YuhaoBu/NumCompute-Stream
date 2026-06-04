@@ -89,3 +89,38 @@ def test_shape_mismatch_mse():
     y_pred = np.array([1, 2])
     with pytest.raises(ValueError):
         mse(y_true, y_pred)
+
+# =====================================
+# Streaming Metrics Tests
+# =====================================
+
+from numcompute.metrics import StreamingClassificationMetrics
+
+def test_streaming_metrics_single_chunk():
+    metric = StreamingClassificationMetrics()
+
+    metric.update(
+        [1, 1, 0, 1],
+        [1, 0, 0, 1]
+    )
+
+    assert metric.accuracy() == 0.75
+
+
+def test_streaming_metrics_multiple_chunks():
+    metric = StreamingClassificationMetrics()
+
+    metric.update([1, 1], [1, 0])
+    metric.update([0, 1], [0, 1])
+
+    assert metric.accuracy() == 0.75
+
+
+def test_streaming_metrics_reset():
+    metric = StreamingClassificationMetrics()
+
+    metric.update([1, 1], [1, 0])
+
+    metric.reset()
+
+    assert metric.accuracy() == 0.0
