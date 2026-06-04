@@ -97,3 +97,120 @@ def test_one_hot_encoder_unknown_ignore():
 
     assert out.shape == (2, 2)
     assert np.array_equal(out[1], np.array([0, 0]))
+def test_standard_scaler_partial_fit_single_chunk():
+    scaler = StandardScaler()
+
+    X = np.array([
+        [1.0, 2.0],
+        [3.0, 4.0],
+        [5.0, 6.0],
+    ])
+
+    scaler.partial_fit(X)
+
+    assert np.allclose(scaler.mean_, np.array([3.0, 4.0]))
+    assert np.allclose(scaler.scale_, np.std(X, axis=0))
+
+
+def test_standard_scaler_partial_fit_multiple_chunks():
+    scaler = StandardScaler()
+
+    X1 = np.array([
+        [1.0, 2.0],
+        [3.0, 4.0],
+    ])
+
+    X2 = np.array([
+        [5.0, 6.0],
+    ])
+
+    scaler.partial_fit(X1)
+    scaler.partial_fit(X2)
+
+    X_all = np.vstack([X1, X2])
+
+    assert np.allclose(scaler.mean_, np.mean(X_all, axis=0))
+    assert np.allclose(scaler.scale_, np.std(X_all, axis=0))
+
+
+def test_standard_scaler_partial_fit_nan_values():
+    scaler = StandardScaler()
+
+    X = np.array([
+        [1.0, np.nan],
+        [3.0, 4.0],
+        [5.0, 6.0],
+    ])
+
+    scaler.partial_fit(X)
+
+    assert np.allclose(scaler.mean_, np.nanmean(X, axis=0))
+    assert np.allclose(scaler.scale_, np.nanstd(X, axis=0))
+
+
+def test_standard_scaler_partial_fit_shape_mismatch():
+    scaler = StandardScaler()
+
+    scaler.partial_fit(np.array([[1.0, 2.0]]))
+
+    with pytest.raises(ValueError):
+        scaler.partial_fit(np.array([[1.0, 2.0, 3.0]]))
+
+def test_standard_scaler_partial_fit_single_chunk():
+    scaler = StandardScaler()
+
+    X = np.array([
+        [1.0, 2.0],
+        [3.0, 4.0],
+        [5.0, 6.0],
+    ])
+
+    scaler.partial_fit(X)
+
+    assert np.allclose(scaler.mean_, np.array([3.0, 4.0]))
+    assert np.allclose(scaler.scale_, np.std(X, axis=0))
+
+
+def test_standard_scaler_partial_fit_multiple_chunks():
+    scaler = StandardScaler()
+
+    X1 = np.array([
+        [1.0, 2.0],
+        [3.0, 4.0],
+    ])
+
+    X2 = np.array([
+        [5.0, 6.0],
+    ])
+
+    scaler.partial_fit(X1)
+    scaler.partial_fit(X2)
+
+    X_all = np.vstack([X1, X2])
+
+    assert np.allclose(scaler.mean_, np.mean(X_all, axis=0))
+    assert np.allclose(scaler.scale_, np.std(X_all, axis=0))
+
+
+def test_standard_scaler_partial_fit_nan_values():
+    scaler = StandardScaler()
+
+    X = np.array([
+        [1.0, np.nan],
+        [3.0, 4.0],
+        [5.0, 6.0],
+    ])
+
+    scaler.partial_fit(X)
+
+    assert np.allclose(scaler.mean_, np.nanmean(X, axis=0))
+    assert np.allclose(scaler.scale_, np.nanstd(X, axis=0))
+
+
+def test_standard_scaler_partial_fit_shape_mismatch():
+    scaler = StandardScaler()
+
+    scaler.partial_fit(np.array([[1.0, 2.0]]))
+
+    with pytest.raises(ValueError):
+        scaler.partial_fit(np.array([[1.0, 2.0, 3.0]]))

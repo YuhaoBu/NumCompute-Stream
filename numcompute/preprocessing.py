@@ -14,13 +14,52 @@ class StandardScaler:
         self.mean_ = None
         self.scale_ = None
         self.n_features_in_ = None
+        self.n_seen_ = None
+        self.M2_ = None
 
     def fit(self, X):
+        self.mean_ = None
+        self.scale_ = None
+        self.n_features_in_ = None
+        self.n_seen_ = None
+        self.M2_ = None
+        return self.partial_fit(X)
+
+    def partial_fit(self, X):
         X = _to_2d_float_array(X)
-        self.mean_ = np.nanmean(X, axis=0)
-        scale = np.nanstd(X, axis=0)
+
+        if self.n_features_in_ is None:
+            self.n_features_in_ = X.shape[1]
+            self.n_seen_ = np.zeros(X.shape[1], dtype=int)
+            self.mean_ = np.zeros(X.shape[1], dtype=float)
+            self.M2_ = np.zeros(X.shape[1], dtype=float)
+
+        if X.shape[1] != self.n_features_in_:
+            raise ValueError(
+                f"X has {X.shape[1]} features, but StandardScaler was fitted with "
+                f"{self.n_features_in_} features."
+            )
+
+        for row in X:
+            mask = ~np.isnan(row)
+            values = row[mask]
+
+            old_count = self.n_seen_[mask]
+            new_count = old_count + 1
+
+            delta = values - self.mean_[mask]
+            self.mean_[mask] += delta / new_count
+            delta2 = values - self.mean_[mask]
+            self.M2_[mask] += delta * delta2
+            self.n_seen_[mask] = new_count
+
+        variance = np.zeros_like(self.mean_)
+        valid = self.n_seen_ > 0
+        variance[valid] = self.M2_[valid] / self.n_seen_[valid]
+
+        scale = np.sqrt(variance)
         self.scale_ = np.where(scale == 0, 1.0, scale)
-        self.n_features_in_ = X.shape[1]
+
         return self
 
     def transform(self, X):
