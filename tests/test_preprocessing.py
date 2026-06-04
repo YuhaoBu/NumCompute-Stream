@@ -156,26 +156,11 @@ def test_standard_scaler_partial_fit_shape_mismatch():
     with pytest.raises(ValueError):
         scaler.partial_fit(np.array([[1.0, 2.0, 3.0]]))
 
-def test_standard_scaler_partial_fit_single_chunk():
-    scaler = StandardScaler()
-
-    X = np.array([
-        [1.0, 2.0],
-        [3.0, 4.0],
-        [5.0, 6.0],
-    ])
-
-    scaler.partial_fit(X)
-
-    assert np.allclose(scaler.mean_, np.array([3.0, 4.0]))
-    assert np.allclose(scaler.scale_, np.std(X, axis=0))
-
-
-def test_standard_scaler_partial_fit_multiple_chunks():
-    scaler = StandardScaler()
+def test_imputer_partial_fit_mean_multiple_chunks():
+    imputer = Imputer(strategy="mean")
 
     X1 = np.array([
-        [1.0, 2.0],
+        [1.0, np.nan],
         [3.0, 4.0],
     ])
 
@@ -183,34 +168,57 @@ def test_standard_scaler_partial_fit_multiple_chunks():
         [5.0, 6.0],
     ])
 
-    scaler.partial_fit(X1)
-    scaler.partial_fit(X2)
+    imputer.partial_fit(X1)
+    imputer.partial_fit(X2)
 
-    X_all = np.vstack([X1, X2])
-
-    assert np.allclose(scaler.mean_, np.mean(X_all, axis=0))
-    assert np.allclose(scaler.scale_, np.std(X_all, axis=0))
+    assert np.allclose(imputer.fill_values_, np.array([3.0, 5.0]))
 
 
-def test_standard_scaler_partial_fit_nan_values():
-    scaler = StandardScaler()
+def test_imputer_partial_fit_median_multiple_chunks():
+    imputer = Imputer(strategy="median")
 
-    X = np.array([
-        [1.0, np.nan],
-        [3.0, 4.0],
-        [5.0, 6.0],
+    X1 = np.array([
+        [1.0, 10.0],
+        [3.0, np.nan],
     ])
 
-    scaler.partial_fit(X)
+    X2 = np.array([
+        [5.0, 30.0],
+    ])
 
-    assert np.allclose(scaler.mean_, np.nanmean(X, axis=0))
-    assert np.allclose(scaler.scale_, np.nanstd(X, axis=0))
+    imputer.partial_fit(X1)
+    imputer.partial_fit(X2)
+
+    assert np.allclose(imputer.fill_values_, np.array([3.0, 20.0]))
 
 
-def test_standard_scaler_partial_fit_shape_mismatch():
-    scaler = StandardScaler()
+def test_imputer_partial_fit_most_frequent_multiple_chunks():
+    imputer = Imputer(strategy="most_frequent")
 
-    scaler.partial_fit(np.array([[1.0, 2.0]]))
+    X1 = np.array([
+        [1.0, np.nan],
+        [1.0, 2.0],
+    ])
 
-    with pytest.raises(ValueError):
-        scaler.partial_fit(np.array([[1.0, 2.0, 3.0]]))
+    X2 = np.array([
+        [3.0, 2.0],
+        [3.0, 4.0],
+    ])
+
+    imputer.partial_fit(X1)
+    imputer.partial_fit(X2)
+
+    assert np.allclose(imputer.fill_values_, np.array([1.0, 2.0]))
+
+
+def test_one_hot_encoder_partial_fit_expands_categories():
+    encoder = OneHotEncoder(handle_unknown="error")
+
+    encoder.partial_fit(np.array(["red", "blue"]))
+    encoder.partial_fit(np.array(["green"]))
+
+    out = encoder.transform(np.array(["red", "green"]))
+
+    assert "green" in encoder.category_to_index_
+    assert out.shape == (2, 3)
+    assert np.all(out.sum(axis=1) == 1)
