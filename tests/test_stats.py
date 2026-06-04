@@ -69,3 +69,38 @@ def test_welford_empty():
     assert result["count"] == 0
     assert np.isnan(result["mean"])
     assert np.isnan(result["variance"])
+
+from numcompute.stats import StreamingStats
+
+def test_streaming_stats_single_chunk():
+    stats = StreamingStats()
+
+    stats.update_stats([1, 2, 3, 4])
+
+    result = stats.result()
+
+    assert result["count"] == 4
+    assert np.isclose(result["mean"], 2.5)
+
+
+def test_streaming_stats_multiple_chunks():
+    stats = StreamingStats()
+
+    stats.update_stats([1, 2])
+    stats.update_stats([3, 4])
+
+    result = stats.result()
+
+    assert result["count"] == 4
+    assert np.isclose(result["mean"], 2.5)
+
+
+def test_streaming_stats_ignore_nan():
+    stats = StreamingStats()
+
+    stats.update_stats([1, np.nan, 3])
+
+    result = stats.result()
+
+    assert result["count"] == 2
+    assert np.isclose(result["mean"], 2.0)

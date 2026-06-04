@@ -67,3 +67,13 @@ class Welford:
 
         variance = self.M2 / (self.n - ddof)
         return {"count": self.n, "mean": self.mean_, "variance": variance}
+
+class StreamingStats:
+    def __init__(self):
+        self.welford = Welford()
+
+    def update_stats(self, X_chunk):
+        self.welford.update(X_chunk)
+
+    def result(self):
+        return self.welford.finalize()
