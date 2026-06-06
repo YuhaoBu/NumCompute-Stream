@@ -124,3 +124,63 @@ def test_streaming_metrics_reset():
     metric.reset()
 
     assert metric.accuracy() == 0.0
+
+def test_streaming_auc_accumulates_with_scores():
+    metric = StreamingClassificationMetrics()
+
+    metric.update(
+        np.array([0, 1, 0, 1]),
+        np.array([0, 1, 0, 1]),
+        y_score=np.array([0.1, 0.8, 0.3, 0.9])
+    )
+
+    assert np.isclose(metric.auc(), 1.0)
+
+
+def test_streaming_auc_uses_predictions_when_scores_missing():
+    metric = StreamingClassificationMetrics()
+
+    metric.update(
+        np.array([0, 1, 0, 1]),
+        np.array([0, 1, 0, 1])
+    )
+
+    assert np.isclose(metric.auc(), 1.0)
+
+
+def test_streaming_rolling_accuracy_window():
+    metric = StreamingClassificationMetrics(window_size=2)
+
+    metric.update(
+        np.array([1, 1, 0]),
+        np.array([1, 0, 0])
+    )
+
+    assert np.isclose(metric.rolling_accuracy(), 0.5)
+
+    metric.update(
+        np.array([1, 0]),
+        np.array([0, 1])
+    )
+
+    assert np.isclose(metric.rolling_accuracy(), 0.0)
+
+
+def test_streaming_result_contains_auc_and_rolling_accuracy():
+    metric = StreamingClassificationMetrics(window_size=3)
+
+    metric.update(
+        np.array([0, 1, 0, 1]),
+        np.array([0, 1, 0, 1]),
+        y_score=np.array([0.1, 0.8, 0.3, 0.9])
+    )
+
+    result = metric.result()
+
+    assert "accuracy" in result
+    assert "precision" in result
+    assert "recall" in result
+    assert "f1" in result
+    assert "auc" in result
+    assert "confusion_matrix" in result
+    assert "rolling_accuracy" in result
