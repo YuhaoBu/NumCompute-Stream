@@ -175,7 +175,7 @@ The test suite covers:
 Current test result:
 
 ```text
-132 passed
+136 passed
 ```
 
 ## Running the Benchmark
