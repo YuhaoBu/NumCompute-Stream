@@ -2,6 +2,12 @@ import numpy as np
 
 
 class DecisionTreeClassifier:
+    """
+    A decision tree classifier built from scratch using NumPy.
+    The tree supports Gini impurity or entropy, depth limits,
+    minimum split size, max feature selection, and chunk-wise
+    updates through partial_fit().
+    """
     def __init__(
         self,
         max_depth=3,
@@ -163,6 +169,7 @@ class DecisionTreeClassifier:
             if unique_values.size <= 1:
                 continue
 
+            # Candidate thresholds are midpoints between sorted unique values.
             thresholds = (unique_values[:-1] + unique_values[1:]) / 2.0
 
             for threshold in thresholds:
@@ -182,7 +189,7 @@ class DecisionTreeClassifier:
 
                 if n_left == 0 or n_right == 0:
                     continue
-
+                # Information gain measures how much impurity is reduced by the split.
                 gain = parent_impurity
                 gain -= (n_left / y.size) * self._impurity(y[left_mask])
                 gain -= (n_right / y.size) * self._impurity(y[right_mask])

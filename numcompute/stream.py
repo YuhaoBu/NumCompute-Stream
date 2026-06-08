@@ -5,6 +5,11 @@ from numcompute.metrics import StreamingClassificationMetrics, accuracy
 
 
 class StreamTrainer:
+    """
+    Manage streaming model training, scoring, and logging.
+    The trainer processes one data chunk at a time and records
+    chunk accuracy, chunk error, cumulative accuracy, and memory usage.
+    """
     def __init__(self, model):
         self.model = model
         self.metrics = StreamingClassificationMetrics()
@@ -40,7 +45,7 @@ class StreamTrainer:
         cumulative_result = self.metrics.result()
 
         self.score_chunks_ += 1
-
+        # Store per-chunk metrics so performance can be tracked over time.
         log = {
             "chunk": self.score_chunks_,
             "chunk_accuracy": float(chunk_accuracy),

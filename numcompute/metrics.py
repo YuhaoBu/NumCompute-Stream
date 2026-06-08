@@ -65,6 +65,11 @@ def mse(y_true, y_pred):
 
 
 class StreamingClassificationMetrics:
+    """
+    Accumulate classification metrics over streaming data chunks.
+    Supports cumulative accuracy, precision, recall, F1 score,
+    confusion matrix, AUC, and rolling-window accuracy.
+    """
     def __init__(self, window_size=None):
         if window_size is not None and window_size < 1:
             raise ValueError("window_size must be a positive integer or None.")

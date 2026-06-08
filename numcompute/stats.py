@@ -69,6 +69,11 @@ class Welford:
         return {"count": self.n, "mean": self.mean_, "variance": variance}
 
 class StreamingStats:
+    """
+    Track feature-wise statistics over incoming data chunks.
+    Supports streaming count, mean, variance, quantile, histogram,
+    and NaN-safe updates.
+    """
     def __init__(self, bins=10, hist_range=None):
         self.count_ = None
         self.mean_ = None

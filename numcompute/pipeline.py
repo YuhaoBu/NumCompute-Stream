@@ -1,4 +1,9 @@
 class Pipeline:
+    """
+    A simple pipeline for chaining preprocessing steps and models.
+    Transformers are applied in order, and the final estimator can be
+    trained incrementally using partial_fit().
+    """
     def __init__(self, steps):
         self.steps = steps
 

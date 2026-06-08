@@ -4,6 +4,11 @@ from numcompute.tree import DecisionTreeClassifier
 
 
 class EnsembleClassifier:
+    """
+    A bagging ensemble classifier using multiple decision trees.
+    Each estimator is trained on a bootstrap sample of the current
+    data chunk. Predictions are combined using majority voting.
+    """
     def __init__(
         self,
         n_estimators=5,
@@ -60,7 +65,7 @@ class EnsembleClassifier:
             self.classes_ = np.unique(np.concatenate([self.classes_, y_chunk]))
 
         n_samples = X_chunk.shape[0]
-
+        # Each tree receives a bootstrap sample of the current chunk.
         for estimator in self.estimators_:
             bootstrap_indices = self.rng_.integers(
                 low=0,
